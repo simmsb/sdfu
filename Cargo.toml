@@ -12,13 +12,13 @@ edition = "2018"
 all-features = true
 
 [dependencies]
-glam = { version = ">=0.18", optional = true }
-vek = { version = "0.15", optional = true }
-nalgebra = { version = "0.27", optional = true }
-ultraviolet = { version = "0.8", optional = true }
+glam = { version = "0.20.2", optional = true }
+vek = { version = "0.15.6", optional = true }
+nalgebra = { version = "0.30.1", optional = true }
+ultraviolet = { version = "0.9.0", optional = true }
 # ultraviolet = { path = "../ultraviolet", optional=true }
 
 [dev-dependencies]
-vek = "0.15"
-nalgebra = "0.27"
-ultraviolet = "0.8"
+vek = "0.15.6"
+nalgebra = "0.30.1"
+ultraviolet = "0.9.0"
