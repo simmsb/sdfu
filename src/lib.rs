@@ -59,6 +59,7 @@ pub mod mathtypes;
 use mathtypes::*;
 pub use mathtypes::{Dim2D, Dim3D, Dimension};
 pub mod primitives;
+use palette::LinSrgba;
 pub use primitives::*;
 
 pub mod util;
@@ -74,6 +75,8 @@ use mods::*;
 pub trait SDF<T, V: Vec<T>>: Copy {
     /// Get distance from `p` to this SDF.
     fn dist(&self, p: V) -> T;
+
+    fn colour(&self, p: V) -> LinSrgba;
 
     /// Estimate the normals of this SDF using the default `NormalEstimator`.
     ///

@@ -26,6 +26,11 @@ where
     fn dist(&self, p: V) -> T {
         self.sdf.dist(p) - self.radius
     }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        self.sdf.colour(p)
+    }
 }
 
 /// Elongate an SDF along a single axis. The elongation is
@@ -66,6 +71,17 @@ where
         let q = p - p.clamp(-h, h);
         self.sdf.dist(q)
     }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        let h = match self.axis {
+            Axis::X => V::new(self.elongation, T::zero(), T::zero()),
+            Axis::Y => V::new(T::zero(), self.elongation, T::zero()),
+            Axis::Z => V::new(T::zero(), T::zero(), self.elongation),
+        };
+        let q = p - p.clamp(-h, h);
+        self.sdf.colour(q)
+    }
 }
 
 impl<T, V, S> SDF<T, V> for Elongate<T, S, Dim2D>
@@ -83,6 +99,17 @@ where
         };
         let q = p - p.clamp(-h, h);
         self.sdf.dist(q)
+    }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        let h = match self.axis {
+            Axis::X => V::new(self.elongation, T::zero()),
+            Axis::Y => V::new(T::zero(), self.elongation),
+            Axis::Z => panic!("Attempting to use Z axis to elongate 2d SDF"),
+        };
+        let q = p - p.clamp(-h, h);
+        self.sdf.colour(q)
     }
 }
 
@@ -116,6 +143,12 @@ where
         let t = q.y().max(q.z()).max(q.x()).min(T::zero());
         self.sdf.dist(q.max(V::zero())) + t
     }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        let q = p.abs() - self.elongation;
+        self.sdf.colour(q.max(V::zero()))
+    }
 }
 
 impl<T, V, S> SDF<T, V> for ElongateMulti<V, S, Dim2D>
@@ -129,6 +162,12 @@ where
         let q = p.abs() - self.elongation;
         let t = q.x().max(q.y()).min(T::zero());
         self.sdf.dist(q.max(V::zero())) + t
+    }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        let q = p.abs() - self.elongation;
+        self.sdf.colour(q.max(V::zero()))
     }
 }
 
@@ -154,6 +193,11 @@ where
     #[inline]
     fn dist(&self, p: V) -> T {
         self.sdf.dist(p - self.translation)
+    }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        self.sdf.colour(p - self.translation)
     }
 }
 
@@ -181,6 +225,11 @@ where
     fn dist(&self, p: V) -> T {
         self.sdf.dist(self.rotation.rotate_vec(p))
     }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        self.sdf.colour(self.rotation.rotate_vec(p))
+    }
 }
 
 /// Rotate an SDF.
@@ -205,5 +254,10 @@ where
     #[inline]
     fn dist(&self, p: V) -> T {
         self.sdf.dist(p / self.scaling) * self.scaling
+    }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        self.sdf.colour(p / self.scaling)
     }
 }

@@ -1,4 +1,8 @@
 //! Operations you can perform to combine two SDFs.
+use palette::{
+    Blend, Mix,
+};
+
 use super::*;
 use std::ops::*;
 
@@ -170,9 +174,21 @@ where
     }
 }
 
+fn blend_amount<T>(a: T, b: T, m: T) -> T
+where
+    T: Copy + Sub<T, Output = T> + Div<T, Output = T> + PartialOrd + One,
+{
+    if a < b {
+        (m - a) / (b - a)
+    } else {
+        T::one() - ((m - b) / (a - b))
+    }
+}
+
 impl<T, V, S1, S2, M> SDF<T, V> for Union<T, S1, S2, M>
 where
-    T: Copy,
+    T: Copy + Sub<T, Output = T> + Div<T, Output = T> + PartialOrd + One,
+    f32: From<T>,
     V: Vec<T>,
     S1: SDF<T, V>,
     S2: SDF<T, V>,
@@ -181,6 +197,18 @@ where
     #[inline]
     fn dist(&self, p: V) -> T {
         self.min_func.min(self.sdf1.dist(p), self.sdf2.dist(p))
+    }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        let a = self.sdf1.dist(p);
+        let b = self.sdf2.dist(p);
+        let m = self.min_func.min(a, b);
+        let blend = blend_amount(a, b, m);
+        let c_a = self.sdf1.colour(p);
+        let c_b = self.sdf2.colour(p);
+
+        c_a.mix(&c_b, f32::from(blend))
     }
 }
 
@@ -211,6 +239,11 @@ where
     fn dist(&self, p: V) -> T {
         (-self.sdf1.dist(p)).max(self.sdf2.dist(p))
     }
+
+    #[inline]
+    fn colour(&self, p: V) -> LinSrgba {
+        self.sdf2.colour(p)
+    }
 }
 
 /// Get the intersection of two SDFs.
@@ -237,5 +270,9 @@ where
     #[inline]
     fn dist(&self, p: V) -> T {
         self.sdf1.dist(p).max(self.sdf2.dist(p))
+    }
+
+    fn colour(&self, p: V) -> LinSrgba {
+        self.sdf1.colour(p).plus(self.sdf2.colour(p))
     }
 }
